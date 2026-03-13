@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { RotateCcw, X, Send, Loader2, User, Sparkles } from "lucide-react";
+import { RotateCcw, X, Send, Loader2, Sparkles } from "lucide-react";
 import { apartamentoVistoriaService } from "@/react-app/services/ApartamentoVistoriaService";
 import { listarStatusVistoria } from "@/react-app/services/EndpointsDominioService";
 import type { ApartamentoVistoriaForm } from "@/shared/types";
