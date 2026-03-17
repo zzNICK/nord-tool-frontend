@@ -1,20 +1,14 @@
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router";
-import { Database, BarChart3, Package, Settings, Menu, ChevronLeft, MessageCircle } from "lucide-react";
-import ChatAssistant from "./ChatAssistant";
+import { Database, BarChart3, Package, Settings, Menu, ChevronLeft } from "lucide-react";
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  // Simulação de token de autenticação. Substitua pela lógica real do seu sistema de auth.
-  const authToken = "seu-token-de-autenticacao-jwt-aqui";
 
   const navItems = [
     { path: "/", label: "Entregas", icon: Package },
     { path: "/database", label: "Banco de Dados", icon: Database },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "chat", label: "Assistente Lugia", icon: MessageCircle, isAction: true },
     { path: "/configuracoes", label: "Configurações", icon: Settings },
   ];
 
@@ -45,21 +39,6 @@ export default function Layout() {
 
           <nav className="px-3 mt-6 flex-1">
             {navItems.map((item: any) => {
-              if (item.isAction) {
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setIsChatOpen(true);
-                      setSidebarOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 mb-2 rounded-lg transition-all duration-200 text-slate-600 hover:bg-slate-50"
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                );
-              }
               return (
                 <NavLink
                   key={item.path}
@@ -106,8 +85,6 @@ export default function Layout() {
           </div>
         </div>
       </main>
-
-      <ChatAssistant isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} token={authToken} />
     </div>
   );
 }

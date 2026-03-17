@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router"; 
-import { Plus, Loader2, Calendar, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Loader2, Calendar, AlertCircle, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from "lucide-react";
 import { format, parseISO, isValid, startOfWeek, endOfWeek} from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -22,6 +22,7 @@ export default function DeliveriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingApartment, setEditingApartment] = useState<ApartamentoVistoriaDto | null>(null);
   const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
+  const [collapsedObservations, setCollapsedObservations] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchApartamentos();
@@ -90,6 +91,39 @@ export default function DeliveriesPage() {
       console.error("Erro ao excluir:", error);
       alert("Não foi possível excluir o registro.");
     }
+  };
+
+  const toggleObservation = (id: number) => {
+    setCollapsedObservations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleExpandCollapseAll = (e: React.MouseEvent, apartmentList: ApartamentoVistoriaDto[], expand: boolean) => {
+    e.stopPropagation(); // Evita que o clique propague para o header da data e o feche
+    setCollapsedObservations(prev => {
+      const newSet = new Set(prev);
+      apartmentList.forEach(apt => {
+        if (apt.idApartamentoVistoria) {
+          // Se a ação for expandir (expand=true), removemos da lista de colapsados.
+          // Se a ação for recolher (expand=false), adicionamos à lista de colapsados.
+          if (expand) {
+            newSet.delete(apt.idApartamentoVistoria);
+          } else {
+            if (apt.txObservacaoRevistoria) {
+              newSet.add(apt.idApartamentoVistoria);
+            }
+          }
+        }
+      });
+      return newSet;
+    });
   };
 
   // Função auxiliar para normalizar datas (lida com YYYY-MM-DD e DD/MM/YYYY)
@@ -243,20 +277,32 @@ export default function DeliveriesPage() {
             const isCurrentTab = activeTab === "current";
             const isCollapsed = collapsedDates[dateKey] ?? (isCurrentTab && isPast);
             const isTranslucent = isCurrentTab && isPast;
+            
+            const apartmentsWithObs = list.filter(apt => apt.txObservacaoRevistoria);
+            const hasObservations = apartmentsWithObs.length > 0;
+            const allAreExpanded = hasObservations && apartmentsWithObs.every(apt => !collapsedObservations.has(apt.idApartamentoVistoria!));
 
             return (
               <section key={dateKey} className={`rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all ${isTranslucent ? "bg-slate-50/80" : "bg-white"}`}>
                 <div 
-                  className={`flex items-center justify-between p-5 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${isTranslucent ? "opacity-60" : ""}`}
+                  className={`flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${isTranslucent ? "opacity-60" : ""}`}
                   onClick={() => toggleDate(dateKey)}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${isTranslucent ? "bg-slate-200 text-slate-500" : "bg-blue-50 text-blue-600"}`}>
                       <Calendar className="w-5 h-5" />
                     </div>
-                    <h3 className={`font-bold ${isTranslucent ? "text-slate-500" : "text-slate-800"}`}>{displayDate}</h3>
+                    <h3 className={`font-bold text-sm sm:text-base ${isTranslucent ? "text-slate-500" : "text-slate-800"}`}>{displayDate}</h3>
                   </div>
-                  {isCollapsed ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronUp className="w-5 h-5 text-slate-400" />}
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    {hasObservations && !isCollapsed && (
+                      <button onClick={(e) => handleExpandCollapseAll(e, list, !allAreExpanded)} className={`flex items-center gap-1.5 text-xs font-bold p-1.5 rounded-md transition-colors ${isTranslucent ? 'text-slate-500 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`} title={allAreExpanded ? "Recolher todas" : "Expandir todas"}>
+                        {allAreExpanded ? <ChevronsUp className="w-4 h-4" /> : <ChevronsDown className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{allAreExpanded ? "Recolher" : "Expandir"}</span>
+                      </button>
+                    )}
+                    {isCollapsed ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronUp className="w-5 h-5 text-slate-400" />}
+                  </div>
                 </div>
                 
                 {!isCollapsed && (
@@ -266,7 +312,9 @@ export default function DeliveriesPage() {
                       key={apt.idApartamentoVistoria} 
                       apartment={apt} 
                       onEdit={(a) => { setEditingApartment(a); setModalOpen(true); }} 
-                      onDelete={handleDelete} 
+                      onDelete={handleDelete}
+                      isObservationExpanded={!collapsedObservations.has(apt.idApartamentoVistoria!)}
+                      onToggleObservation={() => toggleObservation(apt.idApartamentoVistoria!)}
                     />
                   ))}
                 </div>

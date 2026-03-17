@@ -5,6 +5,8 @@ import {
   Clock,
   Home,
   ClipboardCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,12 +16,16 @@ interface ApartmentCardProps {
   apartment: ApartamentoVistoriaDto;
   onEdit: (apartment: ApartamentoVistoriaDto) => void;
   onDelete: (id: number) => void;
+  isObservationExpanded?: boolean;
+  onToggleObservation?: () => void;
 }
 
 export default function ApartmentCard({
   apartment,
   onEdit,
   onDelete,
+  isObservationExpanded,
+  onToggleObservation,
 }: ApartmentCardProps) {
   // Nick, aqui está o segredo: desestruturamos incluindo o dtVistoria do banco
   const {
@@ -144,10 +150,27 @@ export default function ApartmentCard({
 
         {txObservacaoRevistoria && (
           <div className="border-t border-slate-100 pt-4">
-            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Observação</p>
-            <p className="text-xs text-slate-600 leading-relaxed italic">
-              "{txObservacaoRevistoria}"
-            </p>
+            {onToggleObservation ? (
+              <button
+                onClick={onToggleObservation}
+                className="flex items-center justify-between w-full group mb-1"
+              >
+                <p className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-blue-500 transition-colors">Observação</p>
+                {isObservationExpanded ? (
+                  <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
+                ) : (
+                  <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
+                )}
+              </button>
+            ) : (
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Observação</p>
+            )}
+
+            {(!onToggleObservation || isObservationExpanded) && (
+              <p className="text-xs text-slate-600 leading-relaxed italic animate-in fade-in slide-in-from-top-1 duration-200 whitespace-pre-wrap">
+                "{txObservacaoRevistoria}"
+              </p>
+            )}
           </div>
         )}
       </div>
