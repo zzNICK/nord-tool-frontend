@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Package, Map, Briefcase, UserCircle, Sparkles, LayoutDashboard, Database, BookOpen, Settings, ChevronDown } from "lucide-react";
+import { Package, Map, Briefcase, UserCircle, Sparkles, LayoutDashboard, Database, BookOpen, Settings, ChevronDown, Key, type LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,7 +8,7 @@ export default function HomePage() {
   const [activeModule, setActiveModule] = useState<string | null>(null);
 
   // Definindo as opções internas de cada módulo
-  const subMenu: Record<string, { label: string, path: string, icon: any }[]> = {
+  const subMenu: Record<string, { label: string, path: string, icon: LucideIcon }[]> = {
     "Entrega": [
       { label: "Agenda", path: "/entregas", icon: LayoutDashboard },
       { label: "Banco de Dados", path: "/database", icon: Database },
@@ -16,6 +16,7 @@ export default function HomePage() {
     "Mapeamentos": [],
     "Organizacional": [
       { label: "Treinamentos", path: "/treinamentos", icon: BookOpen },
+      { label: "Controle de chaves", path: "/organizacional/controle-chaves", icon: Key },
     ],
     "Gestão Individual": [
       { label: "Configurações", path: "/configuracoes", icon: Settings },

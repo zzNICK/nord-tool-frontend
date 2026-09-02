@@ -1,37 +1,47 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CheckCircle2, XCircle, Clock, Home, Loader2, AlertCircle, RotateCcw, CalendarDays } from "lucide-react";
 import type { DashboardStats } from "@/shared/types";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCondo, setSelectedCondo] = useState<string>(""); 
 
-  useEffect(() => {
-    fetchStats();
-  }, [startDate, endDate, selectedCondo]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
-      
-      // Envia N1 ou N2 para que o backend filtre no Banco de Dados
       if (selectedCondo) params.append("condo", selectedCondo);
 
       const response = await fetch(`/api/dashboard?${params.toString()}`);
-      const data = await response.json();
-      setStats(data);
+      const json = await response.json();
+      // Backend uses ApiResponseBody wrapper: { timestamp, nrStatus, body, txMensagem }
+      const payload = json?.body ?? json;
+
+      // Validate payload shape minimally
+      if (!payload || typeof payload !== "object") {
+        throw new Error("Resposta do dashboard inválida");
+      }
+
+      setStats(payload as DashboardStats);
     } catch (error) {
       console.error("Erro ao carregar estatísticas:", error);
+      setStats(null);
+      setError(error instanceof Error ? error.message : "Não foi possível carregar os dados do Dashboard.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, selectedCondo]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const toggleCondoFilter = (value: string) => {
     setSelectedCondo(prev => prev === value ? "" : value);
@@ -57,7 +67,24 @@ export default function DashboardPage() {
     );
   }
 
-  if (!stats) return null;
+  if (error || !stats) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center p-8">
+        <div className="max-w-md rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
+          <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-500" />
+          <h2 className="text-xl font-bold text-slate-800">Não foi possível carregar o Dashboard</h2>
+          <p className="mt-2 text-sm text-slate-500">{error ?? "Os dados retornados são inválidos."}</p>
+          <button
+            type="button"
+            onClick={fetchStats}
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+          >
+            <RotateCcw className="h-4 w-4" /> Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Cálculos baseados no retorno da API
   // Quando selectedCondo está ativo, a API deve retornar apenas os dados de N1 ou N2

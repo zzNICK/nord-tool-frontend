@@ -3,6 +3,17 @@ import {
   Settings as SettingsIcon, Save, ChevronDown, ChevronUp,
   Loader2, Building2, Clock, Filter, Database, LayoutDashboard
 } from "lucide-react";
+import { ControleChavesService, type ObraControleChaves } from "../services/ControleChavesService";
+import { lerObraControleChaves, salvarObraControleChaves } from "../utils/preferenciasControleChaves";
+
+const ROTULOS_OBRAS_CONTROLE_CHAVES: Record<string, string> = {
+  N1: "Nord 1",
+  N2: "Nord 2",
+  EN: "Energy",
+};
+
+const normalizarIdObraControleChaves = (id: unknown): string =>
+  typeof id === "string" && Object.prototype.hasOwnProperty.call(ROTULOS_OBRAS_CONTROLE_CHAVES, id) ? id : "";
 
 export default function SettingsPage() {
   const [apartmentList, setApartmentList] = useState("");
@@ -24,6 +35,11 @@ export default function SettingsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [defaultDbStatus, setDefaultDbStatus] = useState<string[]>([]);
+  const [obrasControleChaves, setObrasControleChaves] = useState<ObraControleChaves[]>([]);
+  const [obraControleChaves, setObraControleChaves] = useState<string>(() => lerObraControleChaves());
+  const [erroObrasControleChaves, setErroObrasControleChaves] = useState("");
+  const [carregandoObrasControleChaves, setCarregandoObrasControleChaves] = useState(true);
+  const [tentativaObrasControleChaves, setTentativaObrasControleChaves] = useState(0);
 
   useEffect(() => {
     const statusSalvos = localStorage.getItem("@NordTool:filter_db_status");
@@ -51,6 +67,22 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setCarregandoObrasControleChaves(true);
+    setErroObrasControleChaves("");
+    ControleChavesService.listarObras({ signal: controller.signal })
+      .then(setObrasControleChaves)
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setErroObrasControleChaves(error instanceof Error ? error.message : "Falha ao carregar as obras.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCarregandoObrasControleChaves(false);
+      });
+    return () => controller.abort();
+  }, [tentativaObrasControleChaves]);
+
   const handleSave = async () => {
     setSaving(true);
     setMessage("");
@@ -65,6 +97,7 @@ export default function SettingsPage() {
       localStorage.setItem("@NordTool:filter_del_time", defaultDeliveryTime);
       localStorage.setItem("@NordTool:filter_db_condo", defaultDbCondo);
       localStorage.setItem("@NordTool:filter_db_showall", String(defaultDbShowAll));
+      salvarObraControleChaves(obraControleChaves);
 
       setMessage("Parâmetros fixados com sucesso!");
       setTimeout(() => setMessage(""), 3000);
@@ -102,6 +135,43 @@ export default function SettingsPage() {
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-2 overflow-hidden">
         <div className="p-6 md:p-8 space-y-6">
+
+          <section className="border border-emerald-200 rounded-2xl bg-emerald-50/30 p-5 shadow-sm" aria-labelledby="config-controle-chaves">
+            <div className="flex items-start gap-4">
+              <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 id="config-controle-chaves" className="text-lg font-bold text-slate-800">Controle de Chaves</h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">Obra aplicada ao Dashboard, retiradas recentes e Histórico.</p>
+                </div>
+                <label htmlFor="obra-controle-chaves" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Obra/Condomínio</label>
+                <select
+                  id="obra-controle-chaves"
+                  value={normalizarIdObraControleChaves(obraControleChaves)}
+                  onChange={(event) => setObraControleChaves(event.target.value)}
+                  disabled={carregandoObrasControleChaves || !!erroObrasControleChaves}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none shadow-sm disabled:opacity-60"
+                >
+                  <option value="">Todas as obras</option>
+                  {obrasControleChaves
+                    .map((obra) => normalizarIdObraControleChaves(obra.id))
+                    .filter(Boolean)
+                    .map((idObra) => (
+                      <option key={idObra} value={idObra}>{ROTULOS_OBRAS_CONTROLE_CHAVES[idObra]}</option>
+                    ))}
+                </select>
+                {carregandoObrasControleChaves && <p className="text-sm text-slate-500">Carregando obras...</p>}
+                {erroObrasControleChaves && (
+                  <div role="alert" className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <span>{erroObrasControleChaves}</span>
+                    <button type="button" onClick={() => setTentativaObrasControleChaves((valor) => valor + 1)} className="shrink-0 font-semibold underline">Tentar novamente</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
 
           {/* SESSÃO DE PRÉ-CARREGAMENTO (FILTROS) */}
           <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">

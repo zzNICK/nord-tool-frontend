@@ -4,7 +4,7 @@ import {
   Database, BarChart3, Package, Settings, Menu, ChevronLeft, 
   Home as HomeIcon, Briefcase, GraduationCap,
   ClipboardCheck, AlertTriangle, Camera, FileText, BookOpen, 
-  TrendingUp, GitMerge, FileCheck, CalendarDays, Wallet, Dumbbell, Music, Book
+  TrendingUp, GitMerge, FileCheck, CalendarDays, Wallet, Dumbbell, Music, Book, Key
 } from "lucide-react";
 
 export default function Layout() {
@@ -40,6 +40,7 @@ export default function Layout() {
         { path: "/organizacional/diario-obras", label: "Diário de obras", icon: BookOpen },
         { path: "/organizacional/escadinha", label: "Escadinha", icon: TrendingUp },
         { path: "/organizacional/fluxograma", label: "Fluxo de atividades", icon: GitMerge },
+        { path: "/organizacional/controle-chaves", label: "Controle de chaves", icon: Key },
         { path: "/treinamentos", label: "Controle de treinamentos", icon: GraduationCap },
         { path: "/organizacional/fvs", label: "Controle de FVs", icon: FileCheck },
         { path: "/organizacional/projetos", label: "Controle de projetos", icon: Briefcase },

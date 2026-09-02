@@ -21,6 +21,9 @@ import ApartmentModal from "@/react-app/components/ApartmentModal";
 import { apartamentoVistoriaService } from "@/react-app/services/ApartamentoVistoriaService";
 import type { ApartamentoVistoriaDto } from "@/shared/types";
 
+import MassUpdateModal from "@/react-app/components/MassUpdateModal";
+import { ClipboardPaste } from "lucide-react";
+
 export default function DatabasePage() {
   const outletContext = useOutletContext<{ sidebarOpen: boolean }>();
   const sidebarOpen = outletContext?.sidebarOpen ?? false;
@@ -46,6 +49,7 @@ export default function DatabasePage() {
   const [sortConfig, setSortConfig] = useState<{ key: keyof ApartamentoVistoriaDto | null, direction: 'asc' | 'desc' }>({ key: 'dtApartamentoVigente', direction: 'asc' });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showMassUpdateModal, setShowMassUpdateModal] = useState(false);
 
   useEffect(() => {
     const syncSettings = () => {
@@ -373,6 +377,12 @@ export default function DatabasePage() {
                 >
                   <FileSpreadsheet className="w-4 h-4 text-amber-500" /> Planilha modelo
                 </button>
+                <button 
+                  onClick={() => setShowMassUpdateModal(true)}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-xs text-slate-700 hover:bg-slate-50 border-b border-slate-100"
+                >
+                  <ClipboardPaste className="w-4 h-4 text-purple-500" /> Atualizar agenda
+                </button>
               </div>
             )}
           </div>
@@ -502,6 +512,52 @@ export default function DatabasePage() {
           apartment={selectedApartment}
           onClose={() => { setShowModal(false); setSelectedApartment(null); }}
           onSave={handleSaveApartment}
+        />
+      )}
+
+      {showMassUpdateModal && (
+        <MassUpdateModal
+          onClose={() => setShowMassUpdateModal(false)}
+          onProcess={async (agendamentos) => {
+            setLoading(true);
+            try {
+              // Prepara o payload para garantir compatibilidade total com o seu Form do Java
+              const payload = agendamentos.map(item => ({
+                nmApartamentoVistoria: item.nmApartamentoVistoria,
+                dtApartamentoVigente: item.dtApartamentoVigente,
+                nmHorarioVistoria: item.nmHorarioVistoria,
+                idDiaSemana: 1,
+                idStatusVistoria: 1
+              }));
+
+              console.log("Enviando para o backend:", JSON.stringify(payload));
+
+              const response = await fetch("http://localhost:8080/api/v1/nord-tool/apartamentoVistoria/atualizar-agenda-massa", {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json" 
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (response.ok) {
+                alert("Agenda atualizada com sucesso!");
+                if (typeof fetchApartamentosSilencioso === 'function') {
+                  await fetchApartamentosSilencioso();
+                }
+              } else {
+                const erro = await response.text();
+                console.error("Erro do servidor:", erro);
+                alert("Erro ao atualizar: " + erro);
+              }
+            } catch (err) {
+              console.error("Falha na requisição:", err);
+              alert("Falha de conexão com o servidor.");
+            } finally {
+              setLoading(false);
+              setShowMassUpdateModal(false);
+            }
+          }}
         />
       )}
     </div>

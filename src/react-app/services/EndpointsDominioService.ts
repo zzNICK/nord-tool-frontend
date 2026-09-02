@@ -1,7 +1,8 @@
 import type { DiaSemanaDto, StatusVistoriaDto } from "@/shared/types";
 
 // Mantendo a URL do Railway que é o nosso porto seguro
-const BASE_URL = "https://nordtoolbackend-develop.up.railway.app/api/v1/nord-tool";
+// const BASE_URL = "https://nordtoolbackend-develop.up.railway.app/api/v1/nord-tool";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8081/api/v1/nord-tool";
 
 export async function listarDiasSemana(): Promise<DiaSemanaDto[]> {
   try {
