@@ -15,8 +15,25 @@ export interface NovaRetiradaControleChaves { idApartamento: number; idRetirante
 export interface RecebimentoControleChaves { idRecebedor: number }
 
 interface ApiResponse<T> { body?: T; txMensagem?: string; error?: string }
+const CHAVES_LISTA_OBRAS = ['obras', 'items', 'content', 'data'] as const;
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 const API_URL = `${API_BASE}/api/controle-chaves`;
+
+const normalizarListaObras = (conteudo: unknown): ObraControleChaves[] => {
+  if (Array.isArray(conteudo)) return conteudo as ObraControleChaves[];
+
+  if (conteudo && typeof conteudo === 'object') {
+    const objeto = conteudo as Record<string, unknown>;
+    for (const chave of CHAVES_LISTA_OBRAS) {
+      if (Array.isArray(objeto[chave])) return objeto[chave] as ObraControleChaves[];
+    }
+  }
+
+  const chaves = conteudo && typeof conteudo === 'object'
+    ? Object.keys(conteudo).sort().join(', ') || 'nenhuma'
+    : 'nenhuma';
+  throw new Error(`Formato invÃ¡lido ao carregar obras. Chaves recebidas: ${chaves}.`);
+};
 
 const requisitar = async <T>(url: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(url, init);
@@ -36,8 +53,9 @@ const requisitar = async <T>(url: string, init?: RequestInit): Promise<T> => {
 };
 
 export const ControleChavesService = {
-  listarObras(options: { signal?: AbortSignal } = {}) {
-    return requisitar<ObraControleChaves[]>(`${API_URL}/obras`, { signal: options.signal });
+  async listarObras(options: { signal?: AbortSignal } = {}) {
+    const conteudo = await requisitar<unknown>(`${API_URL}/obras`, { signal: options.signal });
+    return normalizarListaObras(conteudo);
   },
   listarApartamentos(busca: string, options: { limite?: number; pagina?: number; signal?: AbortSignal } = {}) {
     const params = new URLSearchParams({ busca, limite: String(options.limite ?? 20), pagina: String(options.pagina ?? 0) });
