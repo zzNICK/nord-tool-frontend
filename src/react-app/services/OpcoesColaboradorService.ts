@@ -13,7 +13,7 @@ const API_BASE = (
   import.meta.env.DEV
     ? '/api/v1/nord-tool'
     : (import.meta.env.VITE_API_URL as string | undefined) || ''
-).replace(/\/$/, '');
+).replace(/\/+$/, '').replace(/\/api$/, '');
 
 const listarOpcoes = async <T extends OpcaoColaborador>(endpoint: string, descricao: string): Promise<T[]> => {
   if (!API_BASE) {

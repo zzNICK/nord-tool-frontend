@@ -14,7 +14,7 @@ const API_BASE = (
   import.meta.env.DEV
     ? ''
     : (import.meta.env.VITE_API_URL as string | undefined) || ''
-).replace(/\/$/, '');
+).replace(/\/+$/, '').replace(/\/api$/, '');
 
 const API_URL = `${API_BASE}/api/colaboradores`;
 
