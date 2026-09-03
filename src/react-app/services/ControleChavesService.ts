@@ -16,7 +16,9 @@ export interface RecebimentoControleChaves { idRecebedor: number }
 
 interface ApiResponse<T> { body?: T; txMensagem?: string; error?: string }
 const CHAVES_LISTA_OBRAS = ['obras', 'items', 'content', 'data'] as const;
-const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '')\n  .replace(/\/+$/, '')\n  .replace(/\/api$/, '');
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '')
+  .replace(/\/+$/, '')
+  .replace(/\/api$/, '');
 const API_URL = `${API_BASE}/api/controle-chaves`;
 
 const normalizarListaObras = (conteudo: unknown): ObraControleChaves[] => {
