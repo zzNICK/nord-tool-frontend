@@ -4,7 +4,7 @@ import type {
 } from "@/shared/types";
 
 // Nick, a URL correta é a do seu backend no Railway, não a do Localhost do Vite!
-const API_BASE = import.meta.env.VITE_API_URL || "https://nordtoolbackend-develop.up.railway.app/api/v1/nord-tool";
+const API_BASE = "https://nordtoolbackend-develop.up.railway.app/api/v1/nord-tool";
 const BASE_URL = `${API_BASE}/apartamentoVistoria`;
 
 export const apartamentoVistoriaService = {
