@@ -10,7 +10,13 @@ export interface Colaborador {
   nomePermissao?: string;
 }
 
-const API_URL = '/api/colaboradores';
+const API_BASE = (
+  import.meta.env.DEV
+    ? ''
+    : (import.meta.env.VITE_API_URL as string | undefined) || ''
+).replace(/\/$/, '');
+
+const API_URL = `${API_BASE}/api/colaboradores`;
 
 type ApiResponseBody<T> = {
   body?: T;

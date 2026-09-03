@@ -9,8 +9,18 @@ interface ApiResponseBody<T> {
 
 type OpcaoColaborador = Empresa | Cargo | Permissao;
 
+const API_BASE = (
+  import.meta.env.DEV
+    ? '/api/v1/nord-tool'
+    : (import.meta.env.VITE_API_URL as string | undefined) || ''
+).replace(/\/$/, '');
+
 const listarOpcoes = async <T extends OpcaoColaborador>(endpoint: string, descricao: string): Promise<T[]> => {
-  const res = await fetch(endpoint);
+  if (!API_BASE) {
+    throw new Error('VITE_API_URL não configurada para a API de Controle de Chaves');
+  }
+
+  const res = await fetch(`${API_BASE}${endpoint}`);
   const texto = await res.text();
   let json: ApiResponseBody<unknown> | unknown = null;
 
